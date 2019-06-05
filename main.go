@@ -31,7 +31,7 @@ func getLineCount(fileName string) int {
 	return count
 }
 
-func clone(giturl string) error {
+func clone(giturl string) (error, string, string) {
 	vs := strings.Split(giturl, "/")
 
 	var subpath string
@@ -42,8 +42,11 @@ func clone(giturl string) error {
 	clonePath := filepath.Join(outpath, subpath)
 
 	if _, err := os.Stat(clonePath); os.IsNotExist(err) {
-		// 必须分成两步：先创建文件夹、再修改权限
 		os.Mkdir(clonePath, 0777) //0777也可以os.ModePerm
+	} else {
+		//如果存在已克隆过的目录，删除掉
+		gitPath := filepath.Join(clonePath, vs[len(vs)-1])
+		os.RemoveAll(gitPath)
 	}
 
 	cmd := fmt.Sprintf("cd %v && /usr/bin/git clone --bare %s",
@@ -53,9 +56,9 @@ func clone(giturl string) error {
 	fmt.Println("out:", out)
 	fmt.Println("err:", e)
 	if err != nil {
-		return err
+		return err, out, e
 	}
-	return nil
+	return nil, out, e
 }
 
 func isCloned(line string) bool {
@@ -72,7 +75,7 @@ func isCloned(line string) bool {
 		return cloned
 	}
 
-	utils.ReadLine("fail.txt", func(line1 string) {
+	utils.ReadLine("success.txt", func(line1 string) {
 		vs := strings.Split(line1, ",")
 		if len(vs) > 1 {
 			if strings.Compare(line, vs[1]) == 0 {
@@ -97,14 +100,14 @@ func doWork(c chan work) {
 			fmt.Printf("[%v/%v]已经克隆过: %v\n",
 				totalCount, curLine, line)
 		} else {
-			err := clone(line)
+			err, _, e := clone(line)
 			if err != nil {
 				//写入失败文件
 				fmt.Println("克隆失败:", err)
 
 				//时间，路径，原因
 				writeLine := fmt.Sprintf("%v,%v,%v\n",
-					utils.GetNowTime(), line, err)
+					utils.GetNowTime(), line, e)
 				utils.WriteLine("fail.txt", writeLine)
 			} else {
 				//写入成功文件
