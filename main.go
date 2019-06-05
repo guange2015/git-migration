@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"git-migration/utils"
+	"github.com/guange2015/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +25,7 @@ type work struct {
 
 func getLineCount(fileName string) int {
 	count := 0
-	utils.ReadLine(fileName, func(string) {
+	_ = utils.ReadLine(fileName, func(string) {
 		count += 1
 	}, false)
 	return count
@@ -42,11 +42,11 @@ func clone(giturl string) (error, string, string) {
 	clonePath := filepath.Join(outpath, subpath)
 
 	if _, err := os.Stat(clonePath); os.IsNotExist(err) {
-		os.Mkdir(clonePath, 0777) //0777也可以os.ModePerm
+		_ = os.Mkdir(clonePath, 0777) //0777也可以os.ModePerm
 	} else {
 		//如果存在已克隆过的目录，删除掉
 		gitPath := filepath.Join(clonePath, vs[len(vs)-1])
-		os.RemoveAll(gitPath)
+		_ = os.RemoveAll(gitPath)
 	}
 
 	cmd := fmt.Sprintf("cd %v && /usr/bin/git clone --bare %s",
@@ -63,7 +63,7 @@ func clone(giturl string) (error, string, string) {
 
 func isCloned(line string) bool {
 	var cloned = false
-	utils.ReadLine("fail.txt", func(line1 string) {
+	_ = utils.ReadLine("fail.txt", func(line1 string) {
 		vs := strings.Split(line1, ",")
 		if len(vs) > 1 {
 			if strings.Compare(line, vs[1]) == 0 {
@@ -75,7 +75,7 @@ func isCloned(line string) bool {
 		return cloned
 	}
 
-	utils.ReadLine("success.txt", func(line1 string) {
+	_ = utils.ReadLine("success.txt", func(line1 string) {
 		vs := strings.Split(line1, ",")
 		if len(vs) > 1 {
 			if strings.Compare(line, vs[1]) == 0 {
@@ -108,14 +108,14 @@ func doWork(c chan work) {
 				//时间，路径，原因
 				writeLine := fmt.Sprintf("%v,%v,%v\n",
 					utils.GetNowTime(), line, e)
-				utils.WriteLine("fail.txt", writeLine)
+				_ = utils.WriteLine("fail.txt", writeLine)
 			} else {
 				//写入成功文件
 				fmt.Println("克隆成功")
 
 				//时间，路径
 				writeLine := fmt.Sprintf("%v,%v\n", utils.GetNowTime(), line)
-				utils.WriteLine("success.txt", writeLine)
+				_ = utils.WriteLine("success.txt", writeLine)
 			}
 		}
 
@@ -151,7 +151,7 @@ func main() {
 		go doWork(c)
 	}
 
-	utils.ReadLine(filePath, func(line string) {
+	_ = utils.ReadLine(filePath, func(line string) {
 		curLine += 1
 		c <- work{totalCount, curLine, line}
 	}, false)
