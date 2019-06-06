@@ -105,6 +105,9 @@ func doWork(c chan work) {
 				//写入失败文件
 				fmt.Println("克隆失败:", err)
 
+				e = strings.ReplaceAll(e, "\r\n", " ")
+				e = strings.ReplaceAll(e, "\n", " ")
+
 				//时间，路径，原因
 				writeLine := fmt.Sprintf("%v,%v,%v\n",
 					utils.GetNowTime(), line, e)
