@@ -14,7 +14,7 @@ var (
 	cc       int
 	filePath string
 	wg       sync.WaitGroup
-	outpath  string
+	outPath  string
 )
 
 type work struct {
@@ -39,7 +39,7 @@ func clone(giturl string) (error, string, string) {
 		subpath = vs[len(vs)-2]
 	}
 
-	clonePath := filepath.Join(outpath, subpath)
+	clonePath := filepath.Join(outPath, subpath)
 
 	if _, err := os.Stat(clonePath); os.IsNotExist(err) {
 		_ = os.Mkdir(clonePath, 0777) //0777也可以os.ModePerm
@@ -127,7 +127,7 @@ func main() {
 	var h bool
 	flag.IntVar(&cc, "c", 1, "多进程并发数量")
 	flag.StringVar(&filePath, "f", "./giturl-tpi.txt", "giturl 地址配置文件")
-	flag.StringVar(&outpath, "o", "/tmp", "克隆路径")
+	flag.StringVar(&outPath, "o", "/tmp", "克隆路径")
 	flag.BoolVar(&h, "h", false, "使用说明")
 	flag.Parse()
 
