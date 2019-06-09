@@ -11,10 +11,13 @@ import (
 )
 
 var (
-	cc       int
-	filePath string
-	wg       sync.WaitGroup
-	outPath  string
+	cc           int
+	filePath     string
+	wg           sync.WaitGroup
+	outPath      string
+	successCount int
+	failCount    int
+	skipCount    int
 )
 
 type work struct {
@@ -25,7 +28,7 @@ type work struct {
 
 func getLineCount(fileName string) int {
 	count := 0
-	_ = utils.ReadLine(fileName, func(string) {
+	_ = utils.ReadLine(fileName, func(line string) {
 		count += 1
 	}, false)
 	return count
@@ -99,11 +102,14 @@ func doWork(c chan work) {
 		if isCloned(line) {
 			fmt.Printf("[%v/%v]已经克隆过: %v\n",
 				totalCount, curLine, line)
+			skipCount += 1
 		} else {
 			err, _, e := clone(line)
 			if err != nil {
 				//写入失败文件
 				fmt.Println("克隆失败:", err)
+
+				failCount += 1
 
 				e = strings.ReplaceAll(e, "\r\n", " ")
 				e = strings.ReplaceAll(e, "\n", " ")
@@ -115,6 +121,8 @@ func doWork(c chan work) {
 			} else {
 				//写入成功文件
 				fmt.Println("克隆成功")
+
+				successCount += 1
 
 				//时间，路径
 				writeLine := fmt.Sprintf("%v,%v\n", utils.GetNowTime(), line)
@@ -149,7 +157,7 @@ func main() {
 	wg.Add(totalCount)
 	curLine := 0
 
-	c := make(chan work, cc)
+	c := make(chan work)
 	for i := 0; i < cc; i += 1 {
 		go doWork(c)
 	}
@@ -160,5 +168,8 @@ func main() {
 	}, false)
 
 	wg.Wait()
+
+	fmt.Printf("执行结束, 总行数：%v, 成功: %v, 失败: %v, 跳过: %v\n",
+		totalCount, successCount, failCount, skipCount)
 
 }
